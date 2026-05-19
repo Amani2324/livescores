@@ -1,24 +1,24 @@
 {
   "crons": [
     {
-      "path": "/api/cron/live",
-      "schedule": "* * * * *"
-    },
-    {
       "path": "/api/cron/fixtures",
-      "schedule": "0 */12 * * *"
+      "schedule": "0 5 * * *"
     },
     {
       "path": "/api/cron/standings",
-      "schedule": "0 * * * *"
+      "schedule": "0 6 * * *"
+    },
+    {
+      "path": "/api/cron/live",
+      "schedule": "0 7 * * *"
     },
     {
       "path": "/api/cron/enrich",
-      "schedule": "30 */6 * * *"
+      "schedule": "0 8 * * *"
     },
     {
       "path": "/api/cron/previews",
-      "schedule": "15 * * * *"
+      "schedule": "0 9 * * *"
     },
     {
       "path": "/api/cron/teams",
