@@ -11,7 +11,7 @@ import {
   getLeagueRecentResults,
   getLeagueStandingsResolved,
 } from "@/lib/data/match";
-import { getLeagueById } from "@/lib/data/leagues";
+import { resolveLeagueForPage } from "@/lib/data/leagues";
 import { isCuratedLeagueId } from "@/lib/leagues/curated";
 import { getScorers, getTeamsByIds } from "@/lib/data/teams";
 import { teamPath } from "@/lib/seo/paths";
@@ -24,8 +24,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const id = Number(leagueId);
   if (!Number.isFinite(id)) return { title: "League" };
   if (!isCuratedLeagueId(id)) return { title: "League" };
-  const league = await getLeagueById(id);
-  if (!league) return { title: "League not found" };
+  const resolved = await resolveLeagueForPage(id);
+  if (!resolved) return { title: "League not found" };
+  const { league } = resolved;
   return {
     title: `${league.name} — standings & fixtures`,
     description: `Standings, fixtures, top scorers, and recent results for ${league.name}.`,
@@ -66,8 +67,9 @@ export default async function LeaguePage({ params }: Props) {
   const id = Number(leagueId);
   if (!Number.isFinite(id)) notFound();
   if (!isCuratedLeagueId(id)) notFound();
-  const league = await getLeagueById(id);
-  if (!league) notFound();
+  const resolved = await resolveLeagueForPage(id);
+  if (!resolved) notFound();
+  const { league, synced } = resolved;
 
   const season = league.current_season ?? new Date().getFullYear();
   const [table, fixtures, results, scorers] = await Promise.all([
@@ -89,7 +91,12 @@ export default async function LeaguePage({ params }: Props) {
       <header className="space-y-2">
         <p className="text-xs uppercase tracking-wide text-emerald-300">League center</p>
         <h1 className="text-3xl font-bold text-white">{league.name}</h1>
-        <p className="text-sm text-zinc-500">{league.country}</p>
+        <p className="text-sm text-zinc-500">
+          {league.country}
+          {!synced ? (
+            <span className="ml-2 text-zinc-600">· Cached tables empty — run fixtures/standings sync or use widgets below</span>
+          ) : null}
+        </p>
       </header>
 
       <section className="rounded-3xl border border-white/5 bg-zinc-900/40 p-4">

@@ -1,6 +1,40 @@
-import { getCuratedLeagueIds, sortLeaguesByCuratedOrder } from "@/lib/leagues/curated";
+import {
+  CURATED_LEAGUES,
+  getCuratedLeagueIds,
+  isCuratedLeagueId,
+  sortLeaguesByCuratedOrder,
+} from "@/lib/leagues/curated";
 import { createPublicSupabase } from "@/lib/supabase/public";
 import type { LeagueRow, PreviewRow } from "@/types/database";
+
+export function getCuratedLeagueMeta(id: number) {
+  return CURATED_LEAGUES.find((l) => l.id === id) ?? null;
+}
+
+/** DB row when synced; otherwise a stub from curated list so /league/[id] never 404s for menu links. */
+export async function resolveLeagueForPage(
+  id: number,
+): Promise<{ league: LeagueRow; synced: boolean } | null> {
+  if (!isCuratedLeagueId(id)) return null;
+  const fromDb = await getLeagueById(id);
+  if (fromDb) return { league: fromDb, synced: true };
+  const meta = getCuratedLeagueMeta(id);
+  if (!meta) return null;
+  const season = new Date().getFullYear();
+  return {
+    synced: false,
+    league: {
+      id: meta.id,
+      name: meta.name,
+      country: meta.group,
+      logo: null,
+      flag: null,
+      type: null,
+      current_season: season,
+      updated_at: new Date().toISOString(),
+    },
+  };
+}
 
 export async function getLeagueShortcuts(): Promise<LeagueRow[]> {
   const supabase = createPublicSupabase();
